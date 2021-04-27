@@ -13,7 +13,7 @@
 
 - (NSString *)title {
     PMLogUtils *logger = [PMLogUtils sharedInstance];
-    NSLog(@"get title start");
+    // NSLog(@"get title start");
     @try {
         NSString *result = [self valueForKey:@"filename"];
         [logger info:@"get title from kvo"];
@@ -88,36 +88,15 @@
   if (resources.count == 1) {
     return resources[0];
   }
-
-  if (![self isAdjust]) {
-    for (PHAssetResource *res in resources) {
-      if (self.mediaType == PHAssetMediaTypeImage ||
-          res.type == PHAssetResourceTypeFullSizePhoto ||
-          res.type == PHAssetResourceTypePhoto) {
-        return res;
-      }
-
-      if (self.mediaType == PHAssetMediaTypeVideo ||
-          res.type == PHAssetResourceTypeFullSizeVideo ||
-          res.type == PHAssetResourceTypeVideo) {
-        return res;
-      }
+    
+    // return latest resource that is a photo
+    for (PHAssetResource *res in [resources reverseObjectEnumerator]) {
+        
+        if (res.type == PHAssetResourceTypeFullSizePhoto ||
+            res.type == PHAssetResourceTypePhoto) {
+          return res;
+        }
     }
-
-    return nil;
-  }
-
-  for (PHAssetResource *res in resources) {
-    if (self.mediaType == PHAssetMediaTypeImage ||
-        res.type == PHAssetResourceTypeFullSizePhoto) {
-      return res;
-    }
-
-    if (self.mediaType == PHAssetMediaTypeVideo ||
-        res.type == PHAssetResourceTypeFullSizeVideo) {
-      return res;
-    }
-  }
 
   return nil;
 }
