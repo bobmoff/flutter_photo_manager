@@ -541,7 +541,6 @@
                                            attributes:@{}
                                                 error:nil];
 
-  NSLog(@"cache path = %@", dirPath);
 
 //  NSString *title = [asset title];
   NSMutableString *path = [NSMutableString stringWithString:dirPath];
