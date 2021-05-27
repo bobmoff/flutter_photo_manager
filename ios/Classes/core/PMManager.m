@@ -298,6 +298,9 @@
   entity.lng = asset.location.coordinate.longitude;
   entity.title = needTitle ? [asset title] : @"";
   entity.favorite = asset.isFavorite;
+    if((asset.mediaSubtypes & PHAssetMediaSubtypePhotoScreenshot) == PHAssetMediaSubtypePhotoScreenshot) {
+        entity.screenshot = YES;
+    }
 
   return entity;
 }

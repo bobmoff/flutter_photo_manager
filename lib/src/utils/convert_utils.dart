@@ -23,8 +23,7 @@ class ConvertUtils {
       final int? modifiedDate = item['modified'];
 
       if (modifiedDate != null) {
-        entity.lastModified =
-            DateTime.fromMillisecondsSinceEpoch(modifiedDate * 1000);
+        entity.lastModified = DateTime.fromMillisecondsSinceEpoch(modifiedDate * 1000);
       }
 
       result.add(entity);
@@ -69,6 +68,7 @@ class ConvertUtils {
       duration: data['duration'] ?? 0,
       orientation: data['orientation'] ?? 0,
       isFavorite: data['favorite'] ?? false,
+      isScreenshot: data['screenshot'] ?? false,
       title: data['title'],
       createDtSecond: data['createDt'],
       modifiedDateSecond: data['modifiedDt'],
