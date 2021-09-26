@@ -3,6 +3,7 @@
 //
 
 #import "PMFileHelper.h"
+#import "PMImport.h"
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
 
@@ -27,7 +28,7 @@ typedef void (^AssetResult)(PMAssetEntity *);
 
 - (BOOL)isAuth;
 
-+ (void)openSetting;
++ (void)openSetting:(NSObject<PMResultHandler>*)result;
 
 - (void)setAuth:(BOOL)auth;
 
@@ -60,6 +61,8 @@ typedef void (^AssetResult)(PMAssetEntity *);
             block:(AssetResult)block;
 
 - (BOOL)existsWithId:(NSString *)assetId;
+
+- (BOOL)entityIsLocallyAvailable:(NSString *)assetId;
 
 - (NSString*)getTitleAsyncWithAssetId: (NSString *) assetId;
 

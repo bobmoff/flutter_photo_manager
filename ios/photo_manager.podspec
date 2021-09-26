@@ -4,19 +4,25 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'photo_manager'
-  s.version          = '0.0.1'
-  s.summary          = 'A new flutter plugin project.'
+  s.version          = '1.0.0'
+  s.summary          = 'Photo management APIs for Flutter.'
   s.description      = <<-DESC
-A new flutter plugin project.
+Photo management APIs for Flutter.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/CaiJingLong/flutter_photo_manager'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'CaiJingLong' => 'cjl_spy@163.com' }
   s.source           = { :path => '.' }
   s.source_files     = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h','Classes/**/**/*.h'
   s.osx.dependency 'FlutterMacOS'
   s.ios.dependency 'Flutter'
+  
+  s.ios.framework = 'Photos'
+  s.ios.framework = 'PhotosUI'
+
+  s.osx.framework = 'Photos'
+  s.osx.framework = 'PhotosUI'
   # s.dependency 'photo_manager_core'
 
   # s.platform = :osx, '10.15'

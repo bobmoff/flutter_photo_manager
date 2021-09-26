@@ -39,9 +39,13 @@ class Plugin with BasePlugin, IosPlugin, AndroidPlugin {
     );
   }
 
-  /// request permission.
-  Future<bool> requestPermission() async {
-    return (await _channel.invokeMethod('requestPermission')) == 1;
+  Future<int> requestPermissionExtend(
+    PermisstionRequestOption requestOption,
+  ) async {
+    return await _channel.invokeMethod(
+      'requestPermissionExtend',
+      requestOption.toMap(),
+    );
   }
 
   /// Use pagination to get album content.
@@ -105,14 +109,14 @@ class Plugin with BasePlugin, IosPlugin, AndroidPlugin {
   Future<Uint8List?> getOriginBytes(
     String id, {
     PMProgressHandler? progressHandler,
-  }) async {
+  }) {
     final params = {'id': id};
     _injectParams(params, progressHandler);
     return _channel.invokeMethod('getOriginBytes', params);
   }
 
-  Future<void> releaseCache() async {
-    await _channel.invokeMethod('releaseMemCache');
+  Future<void> releaseCache() {
+    return _channel.invokeMethod('releaseMemCache');
   }
 
   Future<String?> getFullFile(
@@ -120,20 +124,17 @@ class Plugin with BasePlugin, IosPlugin, AndroidPlugin {
     required bool isOrigin,
     PMProgressHandler? progressHandler,
   }) async {
-    final params = {
-      'id': id,
-      'isOrigin': isOrigin,
-    };
+    final params = {'id': id, 'isOrigin': isOrigin};
     _injectParams(params, progressHandler);
     return _channel.invokeMethod('getFullFile', params);
   }
 
-  Future<void> setLog(bool isLog) async {
-    await _channel.invokeMethod('log', isLog);
+  Future<void> setLog(bool isLog) {
+    return _channel.invokeMethod('log', isLog);
   }
 
-  void openSetting() {
-    _channel.invokeMethod('openSetting');
+  Future<void> openSetting() {
+    return _channel.invokeMethod('openSetting');
   }
 
   /// Nullable
@@ -178,7 +179,7 @@ class Plugin with BasePlugin, IosPlugin, AndroidPlugin {
     String? desc,
     String? relativePath,
   }) async {
-    title ??= 'image_${DateTime.now().millisecondsSinceEpoch / 1000}';
+    title ??= 'image_${DateTime.now().millisecondsSinceEpoch / 1000}.jpg';
 
     final result = await _channel.invokeMethod(
       'saveImage',
@@ -270,7 +271,7 @@ class Plugin with BasePlugin, IosPlugin, AndroidPlugin {
   }
 
   Future<bool> cacheOriginBytes(bool cache) async {
-    return (await _channel.invokeMethod('cacheOriginBytes')) == true;
+    return (await _channel.invokeMethod("cacheOriginBytes", cache)) == true;
   }
 
   Future<String> getTitleAsync(AssetEntity assetEntity) async {
@@ -382,12 +383,18 @@ class Plugin with BasePlugin, IosPlugin, AndroidPlugin {
   Future<void> requestCacheAssetsThumb(
     List<String> ids,
     ThumbOption option,
-  ) async {
+  ) {
     assert(ids.isNotEmpty);
-    await _channel.invokeMethod('requestCacheAssetsThumb', {
+    return _channel.invokeMethod('requestCacheAssetsThumb', {
       'ids': ids,
       'option': option.toMap(),
     });
+  }
+
+  Future<void> presentLimited() async {
+    if (Platform.isIOS) {
+      await _channel.invokeMethod('presentLimited');
+    }
   }
 }
 
@@ -396,6 +403,13 @@ mixin BasePlugin {
 }
 
 mixin IosPlugin on BasePlugin {
+  Future<bool> isLocallyAvailable(String id) async {
+    if (Platform.isAndroid) {
+      return true;
+    }
+    return await _channel.invokeMethod('isLocallyAvailable', {'id': id});
+  }
+
   Future<AssetPathEntity?> iosCreateFolder(
     String name,
     bool isRoot,

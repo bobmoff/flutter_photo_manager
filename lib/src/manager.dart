@@ -4,13 +4,44 @@ Plugin _plugin = Plugin();
 
 /// use the class method to help user load asset list and asset info.
 ///
-/// 这个类可以获取
+/// 这个类是整个库的核心类
 class PhotoManager {
   /// in android WRITE_EXTERNAL_STORAGE  READ_EXTERNAL_STORAGE
   ///
   /// in ios request the photo permission
+  ///
+  /// Use [requestPermissionExtend] to instead;
+  // @Deprecated("Use requestPermissionExtend")
   static Future<bool> requestPermission() async {
-    return _plugin.requestPermission();
+    return (await requestPermissionExtend()).isAuth;
+  }
+
+  /// Android: WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, MEDIA_LOCATION
+  ///
+  /// iOS: NSPhotoLibraryUsageDescription of info.plist
+  ///
+  /// macOS of Release.entitlements:
+  ///  - com.apple.security.assets.movies.read-write
+  ///  - com.apple.security.assets.music.read-write
+  ///
+  /// Also see [PermissionState].
+  static Future<PermissionState> requestPermissionExtend({
+    PermisstionRequestOption requestOption = const PermisstionRequestOption(),
+  }) async {
+    final int resultIndex =
+        await _plugin.requestPermissionExtend(requestOption);
+    return PermissionState.values[resultIndex];
+  }
+
+  /// Prompts the user to update their limited library selection.
+  ///
+  /// This method just support iOS(14.0+).
+  ///
+  /// See document of [Apple doc][].
+  ///
+  /// [Apple doc]: https://developer.apple.com/documentation/photokit/phphotolibrary/3616113-presentlimitedlibrarypickerfromv/
+  static Future<void> presentLimited() async {
+    await _plugin.presentLimited();
   }
 
   static Editor editor = Editor();
@@ -151,11 +182,23 @@ class PhotoManager {
   static void removeChangeCallback(ValueChanged<MethodCall> callback) =>
       _notifyManager.removeCallback(callback);
 
-  /// see [_NotifyManager]
-  static void startChangeNotify() => _notifyManager.startHandleNotify();
+  /// Whether to monitor the change of photo album.
+  static bool notifyingOfChange = false;
+
+  /// See [_NotifyManager.notifyStream]
+  static Stream<bool> get notifyStream => _notifyManager.notifyStream;
 
   /// see [_NotifyManager]
-  static void stopChangeNotify() => _notifyManager.stopHandleNotify();
+  static void startChangeNotify() {
+    _notifyManager.startHandleNotify();
+    notifyingOfChange = true;
+  }
+
+  /// see [_NotifyManager]
+  static void stopChangeNotify() {
+    _notifyManager.stopHandleNotify();
+    notifyingOfChange = false;
+  }
 
   static Future<File?> _getFileWithId(
     String id, {
@@ -219,6 +262,10 @@ class PhotoManager {
     } else {
       return null;
     }
+  }
+
+  static Future<bool> _isLocallyAvailable(String id) {
+    return _plugin.isLocallyAvailable(id);
   }
 
   /// Only valid for Android 29. The API of API 28 must be used with the property of `requestLegacyExternalStorage`.

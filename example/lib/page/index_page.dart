@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:image_scanner_example/page/home_page.dart';
+import 'package:photo_manager_example/page/change_notify_page.dart';
+import 'package:photo_manager_example/page/home_page.dart';
 
 import 'developer/develop_index_page.dart';
 import 'save_image_example.dart';
@@ -21,6 +22,7 @@ class _IndexPageState extends State<IndexPage> {
           routePage("gallery list", NewHomePage()),
           routePage("save media example", SaveMediaExample()),
           routePage("For Developer page", DeveloperIndexPage()),
+          routePage("Change notify example", ChangeNotifyExample()),
         ],
       ),
     );
