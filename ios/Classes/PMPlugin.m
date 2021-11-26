@@ -50,8 +50,7 @@
         int requestAccessLevel = [call.arguments[@"iosAccessLevel"] intValue];
         [self handlePermission:manager handler:handler requestAccessLevel:requestAccessLevel];
     } else if ([call.method isEqualToString:@"presentLimited"]) {
-        [self presentLimited];
-        [handler reply:@1];
+        [self presentLimited:handler];
     } else if ([call.method isEqualToString:@"clearFileCache"]) {
         [manager clearFileCache];
         [handler reply:@1];
@@ -89,39 +88,13 @@
 }
 
 #if TARGET_OS_IOS
-#if __IPHONE_14_0
-
-- (void) handlePermission:(PMManager *)manager handler:(ResultHandler*) handler requestAccessLevel:(int)requestAccessLevel {
-    if (@available(iOS 14, *)) {
-        [PHPhotoLibrary requestAuthorizationForAccessLevel:requestAccessLevel handler:^(PHAuthorizationStatus status) {
-            [self replyPermssionResult:handler status:status];
-        }];
-    } else {
-        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-            [self replyPermssionResult:handler status:status];
-        }];
-    }
-}
-
-- (void)requestPermissionStatus:(int)requestAccessLevel
-                completeHandler:(void (^)(PHAuthorizationStatus status))completeHandler {
-    if (@available(iOS 14, *)) {
-        [PHPhotoLibrary requestAuthorizationForAccessLevel:requestAccessLevel handler:^(PHAuthorizationStatus status) {
-            completeHandler(status);
-        }];
-    } else {
-        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-            completeHandler(status);
-        }];
-    }
-}
-
--(UIViewController*) getCurrentViewController {
-    UIViewController *ctl = UIApplication.sharedApplication.keyWindow.rootViewController;
-    if(ctl){
-        UIViewController *result = ctl;
-        while(1){
-            if(result.presentedViewController) {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_14_0
+- (UIViewController*)getCurrentViewController {
+    UIViewController *controller = UIApplication.sharedApplication.keyWindow.rootViewController;
+    if (controller) {
+        UIViewController *result = controller;
+        while (1) {
+            if (result.presentedViewController) {
                 result = result.presentedViewController;
             } else {
                 return result;
@@ -130,43 +103,86 @@
     }
     return nil;
 }
+#endif
 
--(void)presentLimited {
+- (void)handlePermission:(PMManager *)manager
+                 handler:(ResultHandler*)handler
+      requestAccessLevel:(int)requestAccessLevel {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_14_0
     if (@available(iOS 14, *)) {
-        UIViewController* ctl = [self getCurrentViewController];
-        if(!ctl){
-            return;
-        }
-        [PHPhotoLibrary.sharedPhotoLibrary presentLimitedLibraryPickerFromViewController: ctl];
+        [PHPhotoLibrary requestAuthorizationForAccessLevel:requestAccessLevel handler:^(PHAuthorizationStatus status) {
+            [self replyPermssionResult:handler status:status];
+        }];
+    } else {
+        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+            [self replyPermssionResult:handler status:status];
+        }];
     }
-}
-
 #else
-
-- (void) handlePermission:(PMManager *)manager handler:(ResultHandler*) handler requestAccessLevel:(int)requestAccessLevel {
     [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
         [self replyPermssionResult:handler status:status];
     }];
+#endif
 }
 
 - (void)requestPermissionStatus:(int)requestAccessLevel
                 completeHandler:(void (^)(PHAuthorizationStatus status))completeHandler {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_14_0
+    if (@available(iOS 14, *)) {
+        [PHPhotoLibrary requestAuthorizationForAccessLevel:requestAccessLevel handler:^(PHAuthorizationStatus status) {
+            completeHandler(status);
+        }];
+    } else {
+        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+            completeHandler(status);
+        }];
+    }
+#else
     [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
         completeHandler(status);
     }];
-}
-
--(void)presentLimited {
-}
-
 #endif
+}
+
+- (void)presentLimited:(ResultHandler*)handler {
+#if __IPHONE_14_0
+    if (@available(iOS 14, *)) {
+        UIViewController* controller = [self getCurrentViewController];
+        if (!controller) {
+            [handler reply:[FlutterError
+                            errorWithCode:@"UIViewController is nil"
+                            message:@"presentLimited require a valid UIViewController."
+                            details:nil]];
+            return;
+        }
+#if __IPHONE_15_0
+        if (@available(iOS 15, *)) {
+            [PHPhotoLibrary.sharedPhotoLibrary
+             presentLimitedLibraryPickerFromViewController: controller
+             completionHandler:^(NSArray<NSString *> * _Nonnull list) {
+                [handler reply: list];
+            }];
+        } else {
+            [PHPhotoLibrary.sharedPhotoLibrary presentLimitedLibraryPickerFromViewController: controller];
+            [handler reply:nil];
+        }
+#else
+        [PHPhotoLibrary.sharedPhotoLibrary presentLimitedLibraryPickerFromViewController: controller];
+        [handler reply:nil];
+#endif
+        return;
+    }
+#else
+    [handler reply:nil];
+#endif
+}
 #endif
 
 #if TARGET_OS_OSX
-- (void) handlePermission:(PMManager *)manager handler:(ResultHandler*) handler requestAccessLevel:(int)requestAccessLevel {
-    
+- (void)handlePermission:(PMManager *)manager
+                 handler:(ResultHandler*)handler
+      requestAccessLevel:(int)requestAccessLevel {
 #if __MAC_11_0
-    
     if (@available(macOS 11.0, *)) {
         [PHPhotoLibrary requestAuthorizationForAccessLevel:requestAccessLevel handler:^(PHAuthorizationStatus status) {
             [self replyPermssionResult:handler status:status];
@@ -202,7 +218,8 @@
 #endif
 }
 
--(void)presentLimited {
+- (void)presentLimited:(ResultHandler*)handler {
+    [handler replyError:@"Not supported on macOS."];
 }
 
 #endif
